@@ -88,13 +88,13 @@ Session state (stage, userName, authAttempts) is stored in an **n8n Data Table**
 
 ```bash
 # Hybrid runner: regex for deterministic stages, LLM judge for AI stages
-ANTHROPIC_API_KEY=sk-... bash run_evals_v2.sh
+ANTHROPIC_API_KEY=sk-... bash run_evals.sh
 
 # Regex-only runner (no API key needed, less reliable for AI stages)
 bash run_evals.sh
 
 # Custom endpoint
-bash run_evals_v2.sh https://your-instance.app.n8n.cloud/webhook/multi-intent-assistant/chat
+bash run_evals.sh https://your-instance.app.n8n.cloud/webhook/multi-intent-assistant/chat
 ```
 
 ### LLM Judge
