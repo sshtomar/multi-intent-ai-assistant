@@ -193,7 +193,7 @@ Stateless: the agent passes the queue in every call, gets back the updated queue
 
 # **6. Node Inventory**
 
-22 nodes total.
+23 nodes total.
 
 | # | Node | Type | Purpose |
 | :---- | :---- | :---- | :---- |
@@ -214,13 +214,14 @@ Stateless: the agent passes the queue in every call, gets back the updated queue
 | 15 | Auth Failure | code v2 | Generic error or lockout |
 | 16 | Session Locked | code v2 | Lockout message |
 | 17 | AI Agent | agent v1.7 | Intent capture, processing, wrap-up |
-| 18 | LLM | lmChatOpenAi v1.3 | Language model (temp 0.2) |
+| 18 | Anthropic Chat Model | lmChatAnthropic v1.3 | Claude Haiku 4.5 |
 | 19 | Window Buffer Memory | memoryBufferWindow v1.3 | 30-message context |
 | 20 | Convert Currency | httpRequestTool v4.4 | Frankfurter API |
 | 21 | Get Date Time | toolCode v1.1 | JavaScript date/time computation |
 | 22 | Manage Intents | toolCode v1.1 | Stateless intent queue |
+| 23 | Manual Trigger | manualTrigger v1 | Editor test trigger |
 
-Breakdown: 9 Code nodes, 4 Data Table nodes, 2 routing nodes (Switch + IF), 1 Chat Trigger, 1 Agent, 1 LLM, 1 Memory, 3 Tools.
+Breakdown: 9 Code nodes, 4 Data Table nodes, 2 routing nodes (Switch + IF), 2 Triggers (Chat + Manual), 1 Agent, 1 LLM, 1 Memory, 3 Tools.
 
 # **7. LLM Configuration**
 
@@ -360,7 +361,7 @@ ANTHROPIC_API_KEY=sk-... bash run_evals.sh
 
 | File | Description |
 | :---- | :---- |
-| workflow.json | n8n workflow (22 nodes) |
+| workflow.json | n8n workflow (23 nodes) |
 | evals.json | 12 eval scenarios with steps and pass criteria |
 | run_evals.sh | Multi-turn eval runner (bash + curl + LLM judge) |
 | llm_judge.py | 6 binary pass/fail judges (Claude Haiku) |
