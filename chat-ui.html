@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Multi-Intent AI Assistant</title>
+<style>
+/* ─────────────────────────────────────────────────────────
+ * ANIMATION STORYBOARD
+ *
+ *    0ms   page loads, dark background visible
+ *  200ms   logo fades in, scales 0.8 -> 1.0
+ *  400ms   title slides up from 20px
+ *  600ms   subtitle fades in
+ *  800ms   form fields slide up (staggered 150ms)
+ * 1200ms   login button appears with glow
+ *
+ * ON AUTH SUCCESS:
+ *    0ms   login card scales down + fades
+ *  300ms   chat container scales up from 0.95
+ *  500ms   welcome message slides in
+ *
+ * ON EACH MESSAGE:
+ *    0ms   user bubble slides in from right
+ *  200ms   typing indicator appears
+ *   ~2s    bot bubble slides in from left
+ * ───────────────────────────────────────────────────────── */
+
+:root {
+  --bg-primary: #0a0a0b;
+  --bg-secondary: #111113;
+  --bg-tertiary: #1a1a1e;
+  --bg-input: #16161a;
+  --border: #2a2a2e;
+  --border-focus: #5b5bd6;
+  --text-primary: #ededef;
+  --text-secondary: #8b8b8e;
+  --text-tertiary: #5a5a5e;
+  --accent: #5b5bd6;
+  --accent-glow: rgba(91, 91, 214, 0.3);
+  --accent-hover: #6e6edf;
+  --success: #45a557;
+  --error: #e54d4d;
+  --user-bubble: #2a2a5e;
+  --bot-bubble: #1e1e22;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── LOGIN SCREEN ── */
+.login-container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.login-container.hidden {
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
+}
+
+.login-card {
+  width: 380px;
+  padding: 40px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  text-align: center;
+}
+
+.login-logo {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 20px;
+  background: var(--accent);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  opacity: 0;
+  transform: scale(0.8);
+  animation: fadeScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s forwards;
+}
+
+.login-title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
+}
+
+.login-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  opacity: 0;
+  animation: fadeIn 0.4s ease 0.6s forwards;
+}
+
+.form-group {
+  margin-bottom: 16px;
+  text-align: left;
+  opacity: 0;
+  transform: translateY(12px);
+}
+.form-group:nth-child(1) { animation: slideUp 0.4s ease 0.8s forwards; }
+.form-group:nth-child(2) { animation: slideUp 0.4s ease 0.95s forwards; }
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 15px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.form-input::placeholder { color: var(--text-tertiary); }
+.form-input[type="number"] { -moz-appearance: textfield; }
+.form-input[type="number"]::-webkit-inner-spin-button,
+.form-input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.login-btn {
+  width: 100%;
+  padding: 11px;
+  margin-top: 8px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.2s;
+  opacity: 0;
+  animation: fadeIn 0.4s ease 1.2s forwards;
+}
+.login-btn:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+.login-btn:active { transform: scale(0.98); }
+.login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.login-error {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--error);
+  min-height: 20px;
+  transition: opacity 0.2s;
+}
+
+/* ── CHAT SCREEN ── */
+.chat-container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s,
+              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
+}
+.chat-container.visible {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: all;
+}
+
+.chat-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-secondary);
+}
+.chat-header-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.chat-header-info h2 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.chat-header-info span {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.chat-header-status {
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  background: var(--success);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-behavior: smooth;
+}
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.message {
+  max-width: 75%;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  line-height: 1.55;
+  animation: messageIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.message.bot {
+  align-self: flex-start;
+  background: var(--bot-bubble);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+.message.user {
+  align-self: flex-end;
+  background: var(--user-bubble);
+  border-bottom-right-radius: 4px;
+}
+
+.typing-indicator {
+  align-self: flex-start;
+  padding: 14px 18px;
+  background: var(--bot-bubble);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  border-bottom-left-radius: 4px;
+  display: flex;
+  gap: 5px;
+  animation: messageIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.typing-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--text-tertiary);
+  border-radius: 50%;
+  animation: typingBounce 1.4s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+.chat-input-area {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.chat-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.chat-input::placeholder { color: var(--text-tertiary); }
+
+.send-btn {
+  width: 38px;
+  height: 38px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+.send-btn:hover { background: var(--accent-hover); }
+.send-btn:active { transform: scale(0.9); }
+.send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.send-btn svg { width: 18px; height: 18px; }
+
+/* ── KEYFRAMES ── */
+@keyframes fadeScale {
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes slideUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+@keyframes messageIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-container" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">AI</div>
+    <h1 class="login-title">Multi-Intent Assistant</h1>
+    <p class="login-subtitle">Enter your credentials to continue</p>
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label">User ID</label>
+        <input class="form-input" type="number" id="userId" placeholder="5673" required autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">4-digit PIN</label>
+        <input class="form-input" type="password" id="pin" maxlength="4" placeholder="----" required autocomplete="off" />
+      </div>
+      <button class="login-btn" type="submit" id="loginBtn">Sign in</button>
+    </form>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- CHAT SCREEN -->
+<div class="chat-container" id="chatScreen">
+  <div class="chat-header">
+    <div class="chat-header-icon">AI</div>
+    <div class="chat-header-info">
+      <h2>Multi-Intent Assistant</h2>
+      <span id="chatSubtitle">Currency conversion & date/time queries</span>
+    </div>
+    <div class="chat-header-status"></div>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input-area">
+    <input class="chat-input" type="text" id="chatInput" placeholder="Type your request..." disabled />
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+// ── MOCK AUTH ──
+const USERS = {
+  '5673': { name: 'Devin', pin: '1234' },
+  '8421': { name: 'Sarah', pin: '5678' },
+  '3019': { name: 'Alex',  pin: '9012' },
+  '7745': { name: 'Jordan', pin: '3456' },
+  '1298': { name: 'Maya',  pin: '7890' },
+};
+
+let currentUser = null;
+let authAttempts = 0;
+
+// ── N8N WEBHOOK (replace with your production chat URL) ──
+const N8N_CHAT_URL = '';
+
+function handleLogin(e) {
+  e.preventDefault();
+  const userId = document.getElementById('userId').value.trim();
+  const pin = document.getElementById('pin').value.trim();
+  const errorEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+
+  setTimeout(() => {
+    const user = USERS[userId];
+    if (user && user.pin === pin) {
+      currentUser = { id: userId, name: user.name };
+      errorEl.textContent = '';
+      transitionToChat();
+    } else {
+      authAttempts++;
+      if (authAttempts >= 3) {
+        errorEl.textContent = 'Maximum attempts reached. Please try again later.';
+        btn.disabled = true;
+        btn.textContent = 'Locked';
+        return;
+      }
+      errorEl.textContent = 'Invalid credentials. Please try again.';
+      btn.disabled = false;
+      btn.textContent = 'Sign in';
+      document.getElementById('pin').value = '';
+      document.getElementById('pin').focus();
+    }
+  }, 600);
+}
+
+function transitionToChat() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  const chatScreen = document.getElementById('chatScreen');
+  chatScreen.classList.add('visible');
+  document.getElementById('chatSubtitle').textContent =
+    'Signed in as ' + currentUser.name;
+
+  setTimeout(() => {
+    addBotMessage('Hi ' + currentUser.name + '! How can I help you today?\n\nI can assist with:\n- Currency conversion (exchange rates)\n- Date and time queries');
+    document.getElementById('chatInput').disabled = false;
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('chatInput').focus();
+  }, 500);
+}
+
+function addBotMessage(text) {
+  const container = document.getElementById('chatMessages');
+  const msg = document.createElement('div');
+  msg.className = 'message bot';
+  msg.textContent = text;
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
+}
+
+function addUserMessage(text) {
+  const container = document.getElementById('chatMessages');
+  const msg = document.createElement('div');
+  msg.className = 'message user';
+  msg.textContent = text;
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+  const container = document.getElementById('chatMessages');
+  const typing = document.createElement('div');
+  typing.className = 'typing-indicator';
+  typing.id = 'typingIndicator';
+  typing.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  container.appendChild(typing);
+  container.scrollTop = container.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typingIndicator');
+  if (el) el.remove();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  input.disabled = true;
+  document.getElementById('sendBtn').disabled = true;
+  addUserMessage(text);
+
+  showTyping();
+
+  if (N8N_CHAT_URL) {
+    try {
+      const res = await fetch(N8N_CHAT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'sendMessage', chatInput: text, sessionId: 'ui-' + currentUser.id })
+      });
+      const data = await res.json();
+      hideTyping();
+      addBotMessage(data.output || data.text || JSON.stringify(data));
+    } catch (err) {
+      hideTyping();
+      addBotMessage('Sorry, something went wrong. Please try again.');
+    }
+  } else {
+    setTimeout(() => {
+      hideTyping();
+      addBotMessage('This is a demo UI. Connect to your n8n production webhook URL to get real responses.');
+    }, 1500);
+  }
+
+  input.disabled = false;
+  document.getElementById('sendBtn').disabled = false;
+  input.focus();
+}
+
+document.getElementById('chatInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+</script>
+</body>
+</html>

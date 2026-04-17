@@ -1,0 +1,7 @@
+node_modules/
+.gstack/
+.claude/
+package-lock.json
+eval_results.json
+/tmp/
+*.png.tmp

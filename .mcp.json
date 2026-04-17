@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "n8n-mcp": {
+      "type": "http",
+      "url": "https://sshtomar.app.n8n.cloud/mcp-server/http",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MjE5ZjJlOC1mMDE2LTQ2MzgtOWNkNC1kZjllOWRjM2MyNGMiLCJpc3MiOiJuOG4iLCJhdWQiOiJtY3Atc2VydmVyLWFwaSIsImp0aSI6IjMxNmExOWM4LWQzMzEtNDBjNy1iZGYzLWMwYjNmNWJhNjljNyIsImlhdCI6MTc3NjMxNDYxOX0.hnMBw5u52kDYcYUNx-wBnd3WUC2q5ITrbCo-cZBx28w"
+      }
+    }
+  }
+}
